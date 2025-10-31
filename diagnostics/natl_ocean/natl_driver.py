@@ -103,17 +103,17 @@ with open(case_env_file, 'r') as stream:
 cat_def_file = case_info['CATALOG_FILE']
 case_list = case_info['CASE_LIST']
 model_name = list(case_list.keys())[0]
-start_year = case_list['CESM2_historical_r1i1p1f1']['startdate'].split('-')[0]
-end_year = case_list['CESM2_historical_r1i1p1f1']['enddate'].split('-')[0]
+start_year = case_list['CCCma']['startdate'].split('-')[0]  # TODO: this should not be hard-coded to CCCma
+end_year = case_list['CCCma']['enddate'].split('-')[0]  # TODO: this should not be hard-coded to CCCma
 
 # all cases share variable names and dimension coords in this example, so just get first result for each
-volcello_var = [case['volcello_var'] for case in case_list.values()][0]
 areacello_var = [case['areacello_var'] for case in case_list.values()][0]
 temp_var = [case['thetao_var'] for case in case_list.values()][0]
 hfds_var = [case['hfds_var'] for case in case_list.values()][0]
 salt_var = [case['so_var'] for case in case_list.values()][0]
 
 for case in case_list.values():
+    # Use either vsf or wfo
     if 'vsf_var' in case:
         vsf_var = [case['vsf_var'] for case in case_list.values()][0]
         wfo_mod = False
@@ -122,6 +122,15 @@ for case in case_list.values():
         wfo_mod = True
     else:
         print('vsf_var or wfo_var not found in case')
+    # Use either volcello or thkcello
+    if 'volcello_var' in case:
+        volcello_var = [case['volcello_var'] for case in case_list.values()][0]
+        thkcello_mod = False
+    elif 'thkcello_var' in case:
+        thkcello_var = [case['thkcello_var'] for case in case_list.values()][0]
+        thkcello_mod = True
+    else:
+        print('volcello_var or thkcello_var not found in case')
 
 # Load the files ------------------------------------------------------
 # ThetaO
@@ -136,15 +145,26 @@ model_hfds_dataset = xr.open_dataset(os.environ["HFDS_FILE"])
 # TArea
 model_area_dataset = xr.open_dataset(os.environ["AREACELLO_FILE"])
 
-# Volume
-model_vol_dataset = xr.open_dataset(os.environ["VOLCELLO_FILE"])
+# Compute dz from volcello/areacello or use thkcello
+if thkcello_mod:
+    # Thickness
+    model_vol_dataset = xr.open_dataset(os.environ["THKCELLO_FILE"])
 
-vol = model_vol_dataset[volcello_var]
-area = model_area_dataset[areacello_var]
-dz = vol/area
-if "lev" not in dz.coords:
-    dz = dz.assign_coords(lev=model_vol_dataset["lev"])
-dz = dz.assign_coords(lev=dz.lev / 100.0)  # Convert to meters
+    dz = model_vol_dataset[thkcello_var]
+    if "lev" not in dz.coords:
+        dz = dz.assign_coords(lev=model_vol_dataset["lev"])
+    # Ensure depth units are in meters
+    dz = POD_utils.check_depth_units(dz)
+else:
+    # Volume
+    model_vol_dataset = xr.open_dataset(os.environ["VOLCELLO_FILE"])
+
+    vol = model_vol_dataset[volcello_var]
+    area = model_area_dataset[areacello_var]
+    dz = vol/area
+    if "lev" not in dz.coords:
+        dz = dz.assign_coords(lev=model_vol_dataset["lev"])
+    dz = dz.assign_coords(lev=dz.lev / 100.0)  # Convert to meters
 
 # ---------------------------------------------------------------------
 

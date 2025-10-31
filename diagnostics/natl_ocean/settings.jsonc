@@ -9,12 +9,6 @@
         "python3": ["matplotlib", "xarray"]
     }
   },
-
-//  "data" : {
-//    "frequency": "month",
-//    "realm": "ocean"
-//  },
-
 // Variable Coordinates
   "dimensions" : {
     "lat": {
@@ -45,24 +39,23 @@
       "standard_name" : "sea_surface_temperature",
       "units": "degC"
     },
- //   "wfo": {
- //     "frequency" : "month",
-//      "realm": "ocean",
-//      "dimensions": ["time", "lat", "lon"],
-//      "standard_name" : "water_flux_into_sea_water",
-// //     "standard_name": "Virtual_Salt_Flux_in_FW_Flux_formulation",
- //     "units": "kg m-2 s-1",
-//      "requirement": "optional"
-//    },
-    "vsf": {
-      "frequency" : "month",
-      "realm": "ocean",
-      "dimensions": ["time", "lat", "lon"],
-      "standard_name" : "virtual_salt_flux_into_sea_water",
-  //    "standard_name": "Virtual_Salt_Flux_in_FW_Flux_formulation",
-      "units": "kg m-2 s-1"
-   //   "requirement": "optional"
+   // either wfo or vsf must be available in catalogue
+   "wfo": {
+     "frequency" : "month",
+     "realm": "ocean",
+     "dimensions": ["time", "lat", "lon"],
+     "standard_name" : "water_flux_into_sea_water",
+     "units": "kg m-2 s-1",
+     "requirement": "optional"
     },
+  //  "vsf": {
+  //    "frequency" : "month",
+  //    "realm": "ocean",
+  //    "dimensions": ["time", "lat", "lon"],
+  //    "standard_name" : "virtual_salt_flux_into_sea_water",
+  //    "units": "kg m-2 s-1",
+  //    "requirement": "optional"
+  //  },
     "hfds": {
       "frequency" : "month",
       "realm": "ocean",
@@ -84,26 +77,21 @@
       "standard_name" : "sea_water_potential_temperature",
       "units": "degC"
     },
-    "volcello": {
+    // either volcello or thkcello must be available in catalogue
+    // "volcello": {
+    //   "realm": "ocean",
+    //   "dimensions": ["lev", "lat", "lon"],
+    //   "standard_name" : "ocean_volume",
+    //   "units": "m3",
+    //   "requirement": "optional"
+    // },
+    "thkcello": {
       "realm": "ocean",
-      "dimensions": ["lev", "lat", "lon"],
-      "standard_name" : "ocean_volume",
-      "units": "m3"
+      "dimensions": ["lev"],
+      "standard_name" : "cell_thickness",
+      "units": "m",
+      "requirement": "optional"
     },
-//   "uo": {
-//   "frequency" : "month",
-//      "realm": "ocean",
-//      "dimensions": ["time", "lev", "lat", "lon"],
-//      "standard_name" : "sea_water_x_velocity",
-//      "units": "cm s-1"
-//    },
-//    "vo": {
-//      "frequency" : "month",
-//      "realm": "ocean",
-//      "dimensions": ["time", "lev", "lat", "lon"],
-//      "standard_name" : "sea_water_y_velocity",
-//      "units": "cm s-1"
-//    },
     "areacello": {
       "realm": "ocean",
       "dimensions": ["lat", "lon"],

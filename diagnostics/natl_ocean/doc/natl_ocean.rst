@@ -79,6 +79,14 @@ lev       Depth level             m or cm          2D
 lev_bnds  Depth level bounds      m or cm          2D: lev × bnds (bnds = 2)
 lon, lat  Longitude and latitude  degrees          1D or 2D grid coordinates
 time      Time dimension          datetime         1D
+areacello Cell area                m2               2D: lat × lon
+
+Either volcello or thkcello is required, as well as either wfo or vsf:
+----------------------------------------------------------------------
+volcello  Cell volume              m3               3D: depth × lat × lon
+thkcello  Cell thickness           m                2D: depth × lat × lon
+wfo       Vertical velocity        m/s              3D: time × depth × lat × lon
+vsf       Vertical salt flux       PSU m/s          3D: time × depth × lat × lon
 
 References
 ----------

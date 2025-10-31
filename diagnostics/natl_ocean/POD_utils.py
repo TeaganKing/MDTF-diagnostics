@@ -189,14 +189,17 @@ def check_depth_units(ds):
             ds = ds.assign_coords(lev=lev_converted)
 
     # Convert lev_bnds if needed
-    if 'lev_bnds' in ds.variables:
-        lev_bnds = ds['lev_bnds']
-        if lev_bnds.max() > 8000:
-            lev_bnds_converted = lev_bnds / 100
-            lev_bnds_converted.attrs.update(lev_bnds.attrs)
-            lev_bnds_converted.attrs['units'] = 'm'
-            ds['lev_bnds'] = lev_bnds_converted
-
+    try:
+        if 'lev_bnds' in ds.variables:
+            lev_bnds = ds['lev_bnds']
+            if lev_bnds.max() > 8000:
+                lev_bnds_converted = lev_bnds / 100
+                lev_bnds_converted.attrs.update(lev_bnds.attrs)
+                lev_bnds_converted.attrs['units'] = 'm'
+                ds['lev_bnds'] = lev_bnds_converted
+    except:
+        print("'DataArray' object has no attribute 'variables'.")
+        pass
     return ds
 
 def compute_zavg(ds, var, dz, depth=200):
@@ -215,13 +218,18 @@ def compute_zavg(ds, var, dz, depth=200):
     # Slice the variable and weights to these levels
     data = ds[var].sel(lev=valid_levs)
     dz_sel = dz.sel(lev=valid_levs)
-    dz_sel = dz_sel.rename({'nlat': 'y', 'nlon': 'x'})
+    if dz.standard_name != 'cell_thickness':
+        dz_sel = dz_sel.rename({'nlat': 'y', 'nlon': 'x'})
+    if dz.standard_name == 'cell_thickness':
+        dz_sel = dz_sel.drop_vars(['latitude', 'longitude'], errors='ignore')
+        dz_sel = dz_sel.rename({'j': 'y', 'i': 'x'})
 
     # Do the weighted mean
     newvar = f"{var}_zavg"
 
     # Add to dataset and annotate
-    ds[newvar] = data.weighted(dz_sel).mean('lev', keep_attrs=True).astype('float32')
+    data, dz_sel = xr.align(data, dz_sel, join='inner')
+    ds[newvar] = data.weighted(dz_sel.fillna(0)).mean('lev', keep_attrs=True).astype('float32')
     ds[newvar].attrs['zavg'] = f'0-{depth}m'
 
     return ds
