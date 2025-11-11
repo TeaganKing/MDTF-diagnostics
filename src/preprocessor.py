@@ -1544,9 +1544,20 @@ class MDTFPreprocessorBase(metaclass=util.MDTFABCMeta):
         # assign lat/lon coordinate standard_name if not defined or incorrect
         for v in var_ds.variables:
             if 'lat' in v.lower() and 'lat' not in var_ds[v].attrs['standard_name'].lower():
-                var_ds[v].attrs['standard_name'] = var.Y.standard_name
+                try:
+                    var_ds[v].attrs['standard_name'] = var.Y.standard_name
+                except:
+                    print('Preprocessor is assuming var is thkcello and setting to vertices_latitude')
+                    var_ds[v].attrs['standard_name'] = 'vertices_latitude'
+
             elif 'lon' in v.lower() and 'lon' not in var_ds[v].attrs['standard_name'].lower():
-                var_ds[v].attrs['standard_name'] = var.X.standard_name
+                try:
+                    var_ds[v].attrs['standard_name'] = var.X.standard_name
+                except:
+                    print('Preprocessor is assuming var is thkcello and setting to vertices_longitude')
+                    var_ds[v].attrs['standard_name'] = 'vertices_longitude'
+        # TODO: these try/excepts should be removed, but with thkcello included instead of volcello,
+        # the above additions resolve the error "'NoneType' object has no attribute 'standard_name'"
 
         # The following block is retained for time comparison with dask delayed write procedure
         # var_ds.to_netcdf(
@@ -1560,6 +1571,9 @@ class MDTFPreprocessorBase(metaclass=util.MDTFABCMeta):
         # Uncomment the timing lines and log calls if desired
         # start_time = time.monotonic()
         var.log.info("Writing '%s'.", var.dest_path, tags=util.ObjectLogTag.OUT_FILE)
+        print("DROPPING TIME BOUNDS IN ORDER TO RESOLVE 'failed to prevent overwriting existing key units in attrs on variable time_bnds.'...")
+        # TODO should remove, but not sure how to get this into POD_utils.py given that preprocessor is run first, and we don't want to mess with the data....
+        var_ds = var_ds.drop('time_bnds')
         delayed_write = var_ds.to_netcdf(
             path=var.dest_path,
             mode='w',
